@@ -145,6 +145,8 @@ while position < maxPosition
     end
 end
 totalTime = time - startTime;
+
+format longG
 disp("Time (seconds)");
 disp(totalTime);
 disp("Forces are for one rear tire. Forces on the front wheel are (probably) negligible.");
@@ -161,7 +163,7 @@ f = rho * handles.liftCoefficient * handles.frontalArea * (velocity^2);
 
 function f = getDrag(handles, velocity)
 rho = 1.225;
-f = rho * handles.dragCoefficient * handles.frontArea * (velocity^2);
+f = rho * handles.dragCoefficient * handles.frontalArea * (velocity^2);
 
 function output = TireOutputs(handles, tireLoad)
 pressure = handles.pressure * 0.145038;
@@ -170,8 +172,8 @@ normalForce = tireLoad / 4.4475 / 50;
 slipAngle = 0;
 
 pressureList = [8, 10, 12, 14];
-camberList = [0, 1, 2, 3, 4];
-normalForceList = [1, 2, 3, 4, 5];
+camberList = [0, 2, 4];
+normalForceList = [1, 3, 4, 5];
 slipAngleList = [0, 3, 6];
 
 i = 1;
@@ -187,7 +189,7 @@ while (k < length(normalForceList)-1 && normalForceList(k+1) < normalForce)
     k = k + 1;
 end
 m = 1;
-while (m < length(slipAngleList)-1 && normalForceList(m+1) < normalForce)
+while (m < length(slipAngleList)-1 && slipAngleList(m+1) < slipAngle)
     m = m + 1;
 end
 
@@ -196,6 +198,8 @@ end
 x = zeros(1, 4);
 overturningMoment = 0;
 aligningTorque = 0;
+
+%totalWeight = 0;
 
 for a = 0:1
     if (a == 0)
@@ -217,7 +221,7 @@ for a = 0:1
             end
             
             for e = 0:1
-                if (d == 0)
+                if (e == 0)
                     slipAngleWeight = (slipAngleList(m+1) - slipAngle) / (slipAngleList(m+1) - slipAngleList(m));
                 else
                     slipAngleWeight = (slipAngle - slipAngleList(m)) / (slipAngleList(m+1) - slipAngleList(m));
@@ -226,6 +230,9 @@ for a = 0:1
             
                 pointWeight = pressureWeight * camberWeight * normalForceWeight * slipAngleWeight;
                 %disp(pointWeight);
+                
+                %totalWeight = totalWeight + pointWeight;
+                
                 p = pressureList(i + a) / 2 - 4;
                 c = camberList(j + b) / 2;
                 f = normalForceList(k + d) - 2;
@@ -235,6 +242,7 @@ for a = 0:1
                 end
                 index = p*3*4*3 + c*3*4 + f*3 + s + 1;
                 coeffData = handles.SRCoeffs.coEff(index);
+                %disp(coeffData.force);
                 %disp(coeffData.coeff);
                 x = x + coeffData.coeff * pointWeight;
                 overturningMoment = overturningMoment + coeffData.overturning * pointWeight;
@@ -243,6 +251,8 @@ for a = 0:1
         end
     end
 end
+
+% disp(totalWeight);
 
 %{
 SABound = 0.3; %radians
@@ -261,8 +271,8 @@ f = max(sideForces);
 
 % under current model, just taking the third coefficient is sufficient. 
 f = abs(x(3)); % might be a sign problem, just to be sure. 
+% disp(f);
 output = [f, overturningMoment, aligningTorque];
-disp(output);
 
 
 function edit1_Callback(hObject, eventdata, handles)
