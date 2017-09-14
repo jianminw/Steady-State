@@ -57,19 +57,19 @@ handles.SRCoeffs = load("SR_Pacejka_Coeffs.mat");
 
 % set default values
 handles.tStep = 0.1;
-handles.mass = 296;
-handles.wheelBase = 1.65;
+handles.mass = 308;
+handles.wheelBase = 1.6;
 handles.cogHeight = 0.25;
 handles.pressure = 70;
-handles.frontalArea = 1.22;
-handles.liftCoefficient = 4.4;
-handles.dragCoefficient = 0.9;
+handles.frontalArea = 1.2;
+handles.liftCoefficient = 1.5;
+handles.dragCoefficient = 0.6;
 handles.weightDistribution = 0.47;
 handles.distance = 75;
 handles.runUp = 0.305;
 handles.power = 100;
 handles.torque = 240;
-handles.gearRatio = 3;
+handles.gearRatio = 4.1;
 
 % Choose default command line output for StraightLineAcceleration
 handles.output = hObject;
@@ -114,6 +114,7 @@ startTime = 0;
 peakTireForce = 0;
 peakOverturningMoment = 0;
 peakAligningTorque = 0;
+peakNormalForce = 0;
 
 while position < maxPosition
     force = acceleration * handles.mass;
@@ -126,6 +127,7 @@ while position < maxPosition
     peakTireForce = max(peakTireForce, output(1) );
     peakOverturningMoment = max(peakOverturningMoment, output(2));
     peakAligningTorque = max(peakAligningTorque, output(3));
+    peakNormalForce = max(peakNormalForce, tireLoad);
     
     tireForce = output(1);
     maxForce = tireForce * 2 * (2/3);
@@ -137,6 +139,7 @@ while position < maxPosition
     
     acceleration = newForce / handles.mass;
     velocity = velocity + acceleration * handles.tStep;
+    disp(velocity);
     position = position + velocity * handles.tStep;
     
     time = time + handles.tStep;
@@ -150,12 +153,17 @@ format longG
 disp("Time (seconds)");
 disp(totalTime);
 disp("Forces are for one rear tire. Forces on the front wheel are (probably) negligible.");
+disp("Peak Normal Force (Newtons)");
+disp(peakNormalForce);
 disp("Peak tire longitudinal force (Newtons)");
 disp(peakTireForce);
 disp("Peak overturning moment (Newton-meters)");
 disp(peakOverturningMoment);
 disp("Peak aligning torque (Newton-Meters)");
 disp(peakAligningTorque);
+disp("Peak Acceleration (g)");
+disp(peakNormalForce * 4 / 3 / handles.mass / g);
+
 
 function f = getDownForce(handles, velocity)
 rho = 1.225; % air density

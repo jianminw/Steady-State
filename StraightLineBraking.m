@@ -57,13 +57,13 @@ handles.SRCoeffs = load("SR_Pacejka_Coeffs.mat");
 
 % set default values
 handles.tStep = 0.1;
-handles.mass = 296;
-handles.wheelBase = 1.65;
+handles.mass = 308;
+handles.wheelBase = 1.6;
 handles.cogHeight = 0.25;
 handles.pressure = 70;
-handles.frontalArea = 1.22;
-handles.liftCoefficient = 4.4;
-handles.dragCoefficient = 0.9;
+handles.frontalArea = 1.2;
+handles.liftCoefficient = 1.5;
+handles.dragCoefficient = 0.6;
 handles.weightDistribution = 0.47;
 handles.startingSpeed = 50;
 
@@ -334,13 +334,17 @@ acceleration = 0;
 
 time = 0;
 
+peakFrontTireLoad = 0;
 peakFrontTireForce = 0;
 peakFrontOverturningMoment = 0;
 peakFrontAligningTorque = 0;
 
+peakRearTireLoad = 0;
 peakRearTireForce = 0;
 peakRearOverturningMoment = 0;
 peakRearAligningTorque = 0;
+
+peakAcceleration = 0;
 
 while velocity > 0
     force = acceleration * handles.mass;
@@ -349,6 +353,9 @@ while velocity > 0
     
     frontTireLoad = handles.mass * g / 2 * handles.weightDistribution + loadTransfer / 2 + downForce / 4;
     rearTireLoad = handles.mass * g / 2 * (1 - handles.weightDistribution) - loadTransfer / 2 + downForce / 4;
+    
+    peakFrontTireLoad = max(peakFrontTireLoad, frontTireLoad);
+    peakRearTireLoad = max(peakRearTireLoad, rearTireLoad);
     
     frontOutput = TireOutputs(handles, frontTireLoad);
     rearOutput = TireOutputs(handles, rearTireLoad);
@@ -366,6 +373,7 @@ while velocity > 0
     maxForce = (frontTireForce + rearTireForce) * 2 * (2/3) + getDrag(handles, velocity);
     
     acceleration = maxForce / handles.mass;
+    peakAcceleration = max(peakAcceleration, acceleration);
     velocity = velocity - acceleration * handles.tStep;
     
     time = time + handles.tStep;
@@ -375,6 +383,9 @@ format longG
 disp("Time (seconds)");
 disp(time);
 disp("Top row is for front tires, bottom row is for rear tires");
+disp("Peak Normal Forces (Newtons)");
+disp(peakFrontTireLoad);
+disp(peakRearTireLoad);
 disp("Peak tire longitudinal force (Newtons)");
 disp(peakFrontTireForce);
 disp(peakRearTireForce);
@@ -384,6 +395,8 @@ disp(peakRearOverturningMoment);
 disp("Peak aligning torque (Newton-Meters)");
 disp(peakFrontAligningTorque);
 disp(peakRearAligningTorque);
+disp("Peak Acceleration (g)");
+disp(peakAcceleration / g);
 
 function f = getDownForce(handles, velocity)
 rho = 1.225; % air density

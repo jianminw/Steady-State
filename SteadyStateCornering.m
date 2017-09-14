@@ -1,3 +1,4 @@
+
 function varargout = SteadyStateCornering(varargin)
 % STEADYSTATECORNERING MATLAB code for SteadyStateCornering.fig
 %      STEADYSTATECORNERING, by itself, creates a new STEADYSTATECORNERING or raises the existing
@@ -57,13 +58,13 @@ handles.SACoeffs = load("SA_Pacejka_Coeffs.mat");
 
 % set default values
 handles.vStep = 0.1;
-handles.mass = 296;
-handles.trackWidth = 1.323;
+handles.mass = 308;
+handles.trackWidth = 1.244;
 handles.cogHeight = 0.25;
 handles.pressure = 70;
-handles.frontalArea = 1.22;
-handles.liftCoefficient = 4.4;
-handles.radius = 15;
+handles.frontalArea = 1;
+handles.liftCoefficient = 3;
+handles.radius = 54;
 handles.weightDistribution = 0.47;
 
 % Choose default command line output for SteadyStateCornering
