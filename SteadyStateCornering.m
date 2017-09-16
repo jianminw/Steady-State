@@ -23,7 +23,7 @@ function varargout = SteadyStateCornering(varargin)
 
 % Edit the above text to modify the response to help SteadyStateCornering
 
-% Last Modified by GUIDE v2.5 18-Aug-2017 08:18:53
+% Last Modified by GUIDE v2.5 14-Sep-2017 15:34:17
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -66,6 +66,7 @@ handles.frontalArea = 1;
 handles.liftCoefficient = 3;
 handles.radius = 54;
 handles.weightDistribution = 0.47;
+handles.maxSpeed = 39;
 
 % Choose default command line output for SteadyStateCornering
 handles.output = hObject;
@@ -99,9 +100,9 @@ velocity = 0;
 
 neededSideForce = 0;
 maxSideForce = 1;
-while (neededSideForce < maxSideForce)
+while (neededSideForce < maxSideForce && velocity < handles.maxSpeed)
     velocity = velocity + handles.vStep;
-    acceleration = (velocity / 3.6)^2 / handles.radius;
+    acceleration = velocity^2 / handles.radius;
     neededSideForce = acceleration * handles.mass;
     loadTransfer = neededSideForce * handles.cogHeight / handles.trackWidth;
     downForce = getDownForce(velocity, handles.frontalArea, handles.liftCoefficient);
@@ -142,12 +143,7 @@ while (neededSideForce < maxSideForce)
     
     moment = min( frontTiresSideForce * (1 - handles.weightDistribution), rearTiresSideForce * handles.weightDistribution );
     
-    maxSideForce = moment / (1 - handles.weightDistribution) + moment / handles.weightDistribution; 
-
-    % factor of two thirds from the contents guide in round 5 tire data
-    % page 8, test comments
-    maxSideForce = maxSideForce * (2/3); 
-    % also, removing this line seems to make the car pull 6G in a turn. 
+    maxSideForce = moment / (1 - handles.weightDistribution) + moment / handles.weightDistribution;
 end
 format longG
 
@@ -160,7 +156,7 @@ disp("Overturning Moment (Newton-meters)")
 disp( overturningMoment )
 disp("Aligning Torque (Newtown-meters)")
 disp( aligningTorque )
-disp("Maximum Velocity Reached (km per hour) ")
+disp("Maximum Velocity Reached (Meter / Seccond) ")
 disp(velocity)
 disp("Total side force acting on car (Newtons)")
 disp( maxSideForce )
@@ -171,7 +167,7 @@ disp( maxSideForce / handles.mass / 9.8 )
 
 function f = getDownForce(velocity, frontArea, liftCoeff)
 rho = 1.225; % air density
-f = rho * liftCoeff * frontArea * (velocity / 3.6)^2;
+f = rho * liftCoeff * frontArea * velocity^2 / 2;
 
 
 function output = TireOutputs(handles, tireLoad)
@@ -253,7 +249,7 @@ f = max(sideForces);
 
 % under current model, just taking the third coefficient is sufficient. 
 f = abs(x(3)); % might be a sign problem, just to be sure. 
-output = [f, overturningMoment, aligningTorque];
+output = [f * 2 / 3, overturningMoment, aligningTorque];
 %disp(output);
 
 
@@ -479,6 +475,32 @@ guidata(hObject,handles);
 % --- Executes during object creation, after setting all properties.
 function edit10_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to edit10 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit11_Callback(hObject, eventdata, handles)
+% hObject    handle to edit11 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+handles.maxSpeed = str2double(get(hObject, 'String'));
+guidata(hObject,handles);
+
+% Hints: get(hObject,'String') returns contents of edit11 as text
+%        str2double(get(hObject,'String')) returns contents of edit11 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit11_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit11 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 

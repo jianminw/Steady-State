@@ -61,11 +61,11 @@ handles.mass = 308;
 handles.wheelBase = 1.6;
 handles.cogHeight = 0.25;
 handles.pressure = 70;
-handles.frontalArea = 1.2;
-handles.liftCoefficient = 1.5;
+handles.frontalArea = 1;
+handles.liftCoefficient = 3;
 handles.dragCoefficient = 0.6;
 handles.weightDistribution = 0.47;
-handles.startingSpeed = 50;
+handles.startingSpeed = 39;
 
 % Choose default command line output for StraightLineBraking
 handles.output = hObject;
@@ -350,9 +350,12 @@ while velocity > 0
     force = acceleration * handles.mass;
     loadTransfer = force * handles.cogHeight / handles.wheelBase;
     downForce = getDownForce(handles, velocity);
+    disp(downForce);
     
     frontTireLoad = handles.mass * g / 2 * handles.weightDistribution + loadTransfer / 2 + downForce / 4;
     rearTireLoad = handles.mass * g / 2 * (1 - handles.weightDistribution) - loadTransfer / 2 + downForce / 4;
+    %disp(frontTireLoad);
+    %disp(rearTireLoad);
     
     peakFrontTireLoad = max(peakFrontTireLoad, frontTireLoad);
     peakRearTireLoad = max(peakRearTireLoad, rearTireLoad);
@@ -370,7 +373,7 @@ while velocity > 0
     
     frontTireForce = frontOutput(1);
     rearTireForce = rearOutput(1);
-    maxForce = (frontTireForce + rearTireForce) * 2 * (2/3) + getDrag(handles, velocity);
+    maxForce = (frontTireForce + rearTireForce) * 2;% + getDrag(handles, velocity);
     
     acceleration = maxForce / handles.mass;
     peakAcceleration = max(peakAcceleration, acceleration);
@@ -400,11 +403,11 @@ disp(peakAcceleration / g);
 
 function f = getDownForce(handles, velocity)
 rho = 1.225; % air density
-f = rho * handles.liftCoefficient * handles.frontalArea * (velocity^2);
+f = rho * handles.liftCoefficient * handles.frontalArea * (velocity^2) / 2;
 
 function f = getDrag(handles, velocity)
 rho = 1.225;
-f = rho * handles.dragCoefficient * handles.frontalArea * (velocity^2);
+f = rho * handles.dragCoefficient * handles.frontalArea * (velocity^2) / 2;
 
 function output = TireOutputs(handles, tireLoad)
 pressure = handles.pressure * 0.145038;
@@ -513,7 +516,7 @@ f = max(sideForces);
 % under current model, just taking the third coefficient is sufficient. 
 f = abs(x(3)); % might be a sign problem, just to be sure. 
 % disp(f);
-output = [f, overturningMoment, aligningTorque];
+output = [f * 2 / 3, overturningMoment, aligningTorque];
 
 
 
