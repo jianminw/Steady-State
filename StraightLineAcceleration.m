@@ -116,6 +116,10 @@ peakOverturningMoment = 0;
 peakAligningTorque = 0;
 peakNormalForce = 0;
 
+powerUse = 0;
+counter = 1;
+accel = 0;
+
 while position < maxPosition
     force = acceleration * handles.mass;
     loadTransfer = force * handles.cogHeight / handles.wheelBase;
@@ -135,9 +139,14 @@ while position < maxPosition
     forceAvailable = min( handles.torque / effectiveRadius , handles.power * 1000 / velocity );
     
     newForce = min(maxForce, forceAvailable);
+    power = newForce * velocity;
+    powerUse(counter) = power;
+    counter = counter + 1;
+    
     newForce = newForce - getDrag(handles, velocity);
     
     acceleration = newForce / handles.mass;
+    accel(counter) = acceleration;
     velocity = velocity + acceleration * handles.tStep;
     %disp(velocity);
     position = position + velocity * handles.tStep;
@@ -163,6 +172,13 @@ disp("Peak aligning torque (Newton-Meters)");
 disp(peakAligningTorque);
 disp("Peak Acceleration (g)");
 disp(peakTireForce * 2 / handles.mass / g);
+disp("Max Power");
+disp(max(powerUse));
+disp("Average Power");
+disp(sum(powerUse) / length(powerUse));
+figure
+plot(0:handles.tStep:((length(accel)-1) * handles.tStep), accel);
+ylim([0 100000]);
 
 
 function f = getDownForce(handles, velocity)
